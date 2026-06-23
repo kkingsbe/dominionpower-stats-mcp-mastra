@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import { dirname } from 'path';
 import type { SessionData } from './types.js';
+import { jwtExpiry } from './jwt.js';
 
 export type SessionStore = SessionData;
 
@@ -12,11 +13,19 @@ export async function loadSession(filePath: string): Promise<SessionStore | null
     if ((err as NodeJS.ErrnoException).code === 'ENOENT') return null;
     throw err;
   }
+  let store: SessionStore;
   try {
-    return JSON.parse(raw) as SessionStore;
+    store = JSON.parse(raw) as SessionStore;
   } catch {
     return null;
   }
+  if (store.token) {
+    const jwtExp = jwtExpiry(store.token);
+    if (store.token_expires < jwtExp) {
+      store.token_expires = jwtExp;
+    }
+  }
+  return store;
 }
 
 export async function saveSession(filePath: string, store: SessionStore): Promise<void> {
