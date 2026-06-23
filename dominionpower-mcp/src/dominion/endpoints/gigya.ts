@@ -22,17 +22,28 @@ export async function refreshAccessToken(
     uid: '1',
   };
   const payload = { refreshToken: session.refresh_token ?? '' };
-  const res = await fetchFn(url, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(payload),
-  });
+  let res: Response;
+  try {
+    res = await fetchFn(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+    });
+  } catch (err) {
+    throw new DominionEnergyApiError(
+      `Token refresh network error: ${(err as Error).message}`,
+    );
+  }
   if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    const excerpt = body.slice(0, 300);
     if (res.status === 401) {
-      throw new DominionEnergyAuthError('Token refresh rejected (401)');
+      throw new DominionEnergyAuthError(
+        `Token refresh rejected (401): ${excerpt}`,
+      );
     }
     throw new DominionEnergyApiError(
-      `Token refresh failed: ${res.status} ${res.statusText}`,
+      `Token refresh failed (${res.status} ${res.statusText}): ${excerpt}`,
     );
   }
   const data = (await res.json()) as Record<string, unknown>;
