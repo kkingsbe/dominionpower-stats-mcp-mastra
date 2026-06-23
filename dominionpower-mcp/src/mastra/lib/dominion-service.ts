@@ -2,6 +2,7 @@ import { parseConfig, type AppConfig } from '../../config.js';
 import { loadSession, saveSession, type SessionStore } from '../../dominion/session.js';
 import { DominionEnergyApi } from '../../dominion/client.js';
 import { isAuthenticated, refreshAccessTokenIfNeeded, FullAuthRequiredError } from '../../dominion/auth.js';
+import { jwtExpiry } from '../../dominion/jwt.js';
 import { DataCache } from '../../server/cache.js';
 import { Poller } from '../../server/poller.js';
 import { ApiProxy } from '../../auth-browser/api-proxy.js';
@@ -156,7 +157,7 @@ export class DominionService {
         );
         this.store.token = authResult.token;
         this.store.refresh_token = authResult.refresh_token;
-        this.store.token_expires = Math.floor(Date.now() / 1000) + 25;
+        this.store.token_expires = jwtExpiry(this.store.token);
         this.store.uuid = authResult.uuid;
         this.logger('Dominion auth successful');
         await saveSession(this.sessionPath, this.store);
@@ -196,7 +197,7 @@ export class DominionService {
             );
             this.store.token = authResult.token;
             this.store.refresh_token = authResult.refresh_token;
-            this.store.token_expires = Math.floor(Date.now() / 1000) + 25;
+            this.store.token_expires = jwtExpiry(this.store.token);
             await saveSession(this.sessionPath, this.store);
             await this.syncCookiesToProxy();
             res.writeHead(200, { 'Content-Type': 'application/json' });
