@@ -3,12 +3,15 @@
   "version": "1.0.0",
   "description": "Dominion Energy MCP Server — live energy data via Mastra",
   "type": "module",
-  "engines": { "node": ">=22.13.0" },
+  "engines": {
+    "node": ">=22.13.0"
+  },
   "scripts": {
     "dev": "mastra dev",
     "build": "mastra build --studio",
     "start": "mastra start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@mastra/core": "^1.45.0",
@@ -21,6 +24,7 @@
   "devDependencies": {
     "@types/node": "^26.0.0",
     "mastra": "^1.15.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^2.1.9"
   }
 }
