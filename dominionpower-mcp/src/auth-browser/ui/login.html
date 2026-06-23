@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dominion Energy — Login</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+.card { background: #16213e; padding: 2rem; border-radius: 8px; width: 400px; text-align: center; }
+h1 { font-size: 1.5rem; margin-bottom: 1.5rem; }
+p { color: #aaa; margin-bottom: 1.5rem; }
+input { width: 200px; padding: 0.75rem; margin-bottom: 1rem; border: 1px solid #333; border-radius: 4px; background: #0f3460; color: #eee; text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem; }
+button { background: #e94560; color: #fff; border: none; padding: 0.75rem 2rem; border-radius: 4px; cursor: pointer; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.error { color: #e94560; margin-top: 1rem; }
+.success { color: #4ecca3; margin-top: 1rem; }
+.waiting { color: #f0c040; margin-top: 1rem; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Dominion Energy Login</h1>
+  <div id="status"></div>
+  <div id="tfaSection" style="display:none;">
+    <p>A verification code has been sent to your phone.</p>
+    <form id="tfaForm">
+      <input type="text" id="code" name="code" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" required>
+      <button type="submit">Verify</button>
+    </form>
+  </div>
+  <div id="message"></div>
+</div>
+<script>
+async function checkStatus() {
+  const statusEl = document.getElementById('status');
+  const tfaSection = document.getElementById('tfaSection');
+  const messageEl = document.getElementById('message');
+
+  try {
+    const res = await fetch('/admin/status');
+    const data = await res.json();
+
+    if (data.status === 'tfa_needed') {
+      statusEl.className = '';
+      statusEl.textContent = '';
+      tfaSection.style.display = 'block';
+      messageEl.className = '';
+      messageEl.textContent = '';
+    } else if (data.status === 'authenticated') {
+      statusEl.className = 'success';
+      statusEl.textContent = 'Already logged in. You can close this window.';
+      tfaSection.style.display = 'none';
+    } else if (data.status === 'error') {
+      statusEl.className = 'error';
+      statusEl.textContent = 'Login failed: ' + data.error;
+      tfaSection.style.display = 'none';
+    } else {
+      statusEl.className = 'waiting';
+      statusEl.textContent = 'Initializing login...';
+      tfaSection.style.display = 'none';
+      setTimeout(checkStatus, 2000);
+      return;
+    }
+  } catch {
+    statusEl.className = 'waiting';
+    statusEl.textContent = 'Connecting...';
+    setTimeout(checkStatus, 2000);
+    return;
+  }
+}
+
+document.getElementById('tfaForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const messageEl = document.getElementById('message');
+  const btn = e.target.querySelector('button');
+  btn.disabled = true;
+  messageEl.className = '';
+  messageEl.textContent = 'Verifying...';
+  try {
+    const res = await fetch('/admin/tfa', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: document.getElementById('code').value }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      messageEl.className = 'success';
+      messageEl.textContent = 'Verification successful! You can close this window.';
+      document.getElementById('tfaSection').style.display = 'none';
+    } else {
+      messageEl.className = 'error';
+      messageEl.textContent = data.error || 'Verification failed';
+      btn.disabled = false;
+    }
+  } catch {
+    messageEl.className = 'error';
+    messageEl.textContent = 'Connection error';
+    btn.disabled = false;
+  }
+});
+
+checkStatus();
+</script>
+</body>
+</html>

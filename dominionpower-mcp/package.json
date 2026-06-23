@@ -1,0 +1,26 @@
+{
+  "name": "dominionpower-mcp",
+  "version": "1.0.0",
+  "description": "Dominion Energy MCP Server — live energy data via Mastra",
+  "type": "module",
+  "engines": { "node": ">=22.13.0" },
+  "scripts": {
+    "dev": "mastra dev",
+    "build": "mastra build --studio",
+    "start": "mastra start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@mastra/core": "^1.45.0",
+    "@mastra/loggers": "^1.2.0",
+    "@mastra/mcp": "^1.0.0",
+    "pino": "^9.4.0",
+    "playwright-chromium": "^1.49.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.0",
+    "mastra": "^1.15.0",
+    "typescript": "^6.0.3"
+  }
+}
