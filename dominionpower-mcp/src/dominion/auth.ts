@@ -45,8 +45,10 @@ export async function refreshAccessTokenIfNeeded(
     store.token_expires = now + result.expires_in;
     log?.(`refresh succeeded: new token expires at ${store.token_expires}`);
   } catch (err) {
+    const message = (err as Error).message ?? String(err);
+    log?.(`refresh failed: ${message}`);
     if (err instanceof DominionEnergyAuthError) {
-      throw new FullAuthRequiredError(err.message);
+      throw new FullAuthRequiredError(message);
     }
     throw err;
   }
